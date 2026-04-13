@@ -1,0 +1,694 @@
+/* Python Ankara — pythonankara.com */
+
+/* ------------------------------------------------------------------ */
+/* RESET & BASE                                                       */
+/* ------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #fafaf8;
+  --color-text: #111;
+  --color-muted: #888;
+  --color-subtle: #bbb;
+  --color-border: #f0efea;
+  --color-border-light: #f5f4ef;
+  --color-brand: #306998;
+  --color-green: #16a34a;
+  --mono: "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* PHOTO STACK — desktop: draggable spread, mobile: tap-through deck  */
+/* ------------------------------------------------------------------ */
+.stack-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1rem 0;
+  overflow: visible;
+}
+
+.stack-box {
+  width: min(65vw, 272px);
+  aspect-ratio: 1;
+  position: relative;
+}
+
+.stack-card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background: #fafaf6;
+  border-radius: 4px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  will-change: transform;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 3.5% 3.5% 12% 3.5%;
+}
+.stack-card:active {
+  cursor: grabbing;
+}
+
+.stack-card .photo-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.stack-card .photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.stack-card .card-label {
+  padding: 4% 2% 0;
+  font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+  font-weight: 700;
+  color: #555;
+  text-align: center;
+}
+
+.stack-hint {
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--color-subtle);
+}
+
+/* Logo card: centered SVG on white instead of a photo */
+.card-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+.card-logo img {
+  object-fit: contain;
+  padding: 1.5rem;
+}
+
+/* Mobile deck counter (hidden on desktop) */
+.stack-counter {
+  display: none;
+  font-size: 0.65rem;
+  color: var(--color-subtle);
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+}
+
+/* ------------------------------------------------------------------ */
+/* CONTENT WRAPPER                                                    */
+/* ------------------------------------------------------------------ */
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 2.5rem 0 1rem;
+}
+.section-head:first-child {
+  margin-top: 1rem;
+}
+
+.section-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.section-eyebrow {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-subtle);
+}
+
+/* ------------------------------------------------------------------ */
+/* NEXT EVENT CARD                                                    */
+/* ------------------------------------------------------------------ */
+.next-event {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04),
+    0 12px 40px -12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+}
+
+/* Hero image */
+.ne-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #111;
+}
+.ne-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ne-img-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.6));
+}
+
+.ne-number {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+.ne-date-overlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  color: white;
+  z-index: 2;
+}
+.ne-date-overlay .day {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.ne-date-overlay .mo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+/* Body */
+.ne-body {
+  padding: 1.5rem;
+}
+
+.ne-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-green);
+  background: #f0fdf4;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  margin-bottom: 0.85rem;
+}
+.ne-tag .pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.ne-body h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin-bottom: 0.6rem;
+}
+
+.ne-lede {
+  font-size: 0.88rem;
+  color: #666;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.ne-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 1.25rem;
+}
+.ne-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.ne-meta-row svg {
+  width: 16px;
+  height: 16px;
+  stroke: #999;
+  flex-shrink: 0;
+}
+
+/* CTA button */
+.ne-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.ne-cta:hover {
+  background: var(--color-brand);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -6px rgba(48, 105, 152, 0.5);
+}
+.ne-cta svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  transition: transform 0.2s;
+}
+.ne-cta:hover svg {
+  transform: translateX(3px);
+}
+
+.ne-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ne-cta--secondary {
+  background: transparent;
+  color: #111;
+  border: 1.5px solid var(--color-border);
+}
+.ne-cta--secondary:hover {
+  background: #f5f4ef;
+  border-color: #ddd;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* PAST EVENTS LIST                                                   */
+/* ------------------------------------------------------------------ */
+.past-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.past-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s;
+}
+.past-item:hover {
+  transform: translateX(2px);
+  border-color: #ddd;
+  box-shadow: 0 4px 16px -6px rgba(0, 0, 0, 0.08);
+}
+
+.past-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.past-info {
+  flex: 1;
+  min-width: 0;
+}
+.past-info h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.past-info .pm {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.past-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  text-align: center;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--color-border);
+  min-width: 48px;
+}
+.past-date .d {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+}
+.past-date .m {
+  font-size: 0.6rem;
+  color: var(--color-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.15rem;
+}
+.past-date .y {
+  font-size: 0.55rem;
+  color: #ccc;
+  margin-top: 0.1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* FOOTER                                                             */
+/* ------------------------------------------------------------------ */
+footer {
+  max-width: 640px;
+  margin: 2rem auto 0;
+  padding: 2rem 1.5rem 2.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.foot-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.foot-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: -0.01em;
+}
+
+/* Logo swap animation (pyankara <-> python) */
+.foot-logo-wrap {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.foot-logo-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.5s ease;
+}
+.foot-logo-wrap .logo-pyankara {
+  opacity: 1;
+  transform: scale(1.35); /* compensate viewBox padding in SVG */
+}
+.foot-logo-wrap .logo-python {
+  opacity: 0;
+}
+.foot-logo-wrap.show-python .logo-pyankara {
+  opacity: 0;
+}
+.foot-logo-wrap.show-python .logo-python {
+  opacity: 1;
+}
+
+.foot-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Social icon links */
+.foot-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.foot-socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--color-subtle);
+  transition: all 0.15s;
+}
+.foot-socials a:hover {
+  color: var(--color-text);
+  background: var(--color-border);
+}
+.foot-socials a svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.foot-sep {
+  width: 1px;
+  height: 20px;
+  background: #e8e7e3;
+  margin: 0 0.25rem;
+}
+
+/* Contact popover */
+.contact-wrap {
+  position: relative;
+  display: inline-block;
+}
+.contact-trigger {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.15s;
+  text-decoration: none;
+}
+.contact-trigger:hover {
+  color: var(--color-text);
+}
+
+.contact-pop {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  left: 50%;
+  transform: translate(-50%, 6px);
+  background: #111;
+  color: white;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 28px -6px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+  z-index: 50;
+}
+.contact-pop::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #111;
+}
+.contact-wrap.is-open .contact-pop {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.contact-email {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.contact-email:hover {
+  color: #fff;
+}
+
+.contact-copy {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: background 0.15s;
+}
+.contact-copy:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.contact-copy.copied {
+  background: var(--color-green);
+}
+.contact-copy svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+}
+
+/* Copyright bar */
+.foot-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--color-subtle);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border-light);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.foot-bottom .made {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+}
+.foot-bottom .made span {
+  color: var(--color-brand);
+}
+
+/* ------------------------------------------------------------------ */
+/* RESPONSIVE — MOBILE (<= 600px)                                    */
+/* ------------------------------------------------------------------ */
+@media (max-width: 600px) {
+  .content {
+    padding: 1.5rem 1rem 2rem;
+  }
+  .section-title {
+    font-size: 1.2rem;
+  }
+  .ne-body {
+    padding: 1.25rem;
+  }
+  .ne-body h3 {
+    font-size: 1.1rem;
+  }
+  .ne-date-overlay .day {
+    font-size: 2rem;
+  }
+  .past-info h4 {
+    font-size: 0.82rem;
+  }
+  .past-img {
+    width: 52px;
+    height: 52px;
+  }
+  footer {
+    padding: 2rem 1rem 2.5rem;
+  }
+  .foot-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Photo stack → stacked deck mode */
+  .stack-wrapper {
+    padding: 1.5rem 1rem 0;
+  }
+  .stack-box {
+    width: 72vw;
+    aspect-ratio: auto;
+    margin: 0 auto;
+    position: relative;
+  }
+  .stack-card {
+    position: absolute;
+    inset: auto;
+    top: 0;
+    left: 0;
+    width: 100%;
+    cursor: pointer;
+    touch-action: pan-y;
+    padding: 10px 10px 32px 10px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.4s ease;
+  }
+  .stack-card:active {
+    cursor: pointer;
+  }
+  .stack-card .card-label {
+    font-size: 0.72rem;
+    padding: 6px 2px 0;
+  }
+  .stack-hint {
+    display: none;
+  }
+  .stack-counter {
+    display: block;
+  }
+}
