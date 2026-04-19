@@ -243,6 +243,10 @@ body {
   background: var(--color-green);
   animation: pulse 2s infinite;
 }
+.ne-tag--done {
+  color: #6b7280;
+  background: #f3f4f6;
+}
 @keyframes pulse {
   50% {
     opacity: 0.3;
