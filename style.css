@@ -247,6 +247,14 @@ body {
   color: #6b7280;
   background: #f3f4f6;
 }
+.ne-tag--upcoming {
+  color: var(--color-brand);
+  background: #eef4f9;
+}
+.ne-tag--live {
+  color: var(--color-green);
+  background: #f0fdf4;
+}
 @keyframes pulse {
   50% {
     opacity: 0.3;
