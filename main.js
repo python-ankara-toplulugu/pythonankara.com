@@ -352,3 +352,125 @@ document.querySelectorAll(".contact-copy").forEach((btn) => {
     }, 1800);
   });
 });
+
+/* ================================================================== */
+/* 4. FEATURED EVENT (date/time flag)                                 */
+/* ================================================================== */
+/*
+ * One featured slot, driven by each card's data attributes:
+ *   data-date  — event day, YYYY-MM-DD (Europe/Istanbul)
+ *   data-start — start time, HH:MM
+ *   data-end   — end time, HH:MM
+ * A single date plus a time range. Combined with Istanbul's fixed +03:00
+ * offset (no DST) into absolute instants, so the comparison is anchored to
+ * Istanbul regardless of the visitor's local timezone.
+ *
+ * Selection (threshold = end time):
+ *   - Among cards not yet ended (now < end), show the one starting soonest.
+ *       now < start          → "upcoming"  (Sıradaki Etkinlik)
+ *       start <= now < end    → "live"      (Mevcut Etkinlik)
+ *   - If every card has ended, show the most recently finished one.
+ *       → "completed" (Son Etkinlik / Etkinlik Tamamlandı)
+ */
+(() => {
+  const slot = document.querySelector(".featured-events");
+  if (!slot) return;
+
+  const cards = [...slot.querySelectorAll(".next-event[data-event]")];
+  if (cards.length === 0) return;
+
+  const head = document.querySelector("[data-featured-head]");
+
+  // Europe/Istanbul is a fixed UTC+3 offset (no DST), so date + time map to a
+  // single absolute instant without ambiguity.
+  const OFFSET = "+03:00";
+  const startOf = (el) => new Date(`${el.dataset.date}T${el.dataset.start}:00${OFFSET}`);
+  const endOf = (el) => new Date(`${el.dataset.date}T${el.dataset.end}:00${OFFSET}`);
+
+  // All visible dates derive from data-date / data-start / data-end — never
+  // hand-written in the markup — so the displayed day, full date and time
+  // range can never drift from the flag. Formatted in Europe/Istanbul, tr-TR.
+  const TZ = "Europe/Istanbul";
+  const tr = (opts) => new Intl.DateTimeFormat("tr-TR", { timeZone: TZ, ...opts });
+  const fmt = {
+    day: tr({ day: "numeric" }),
+    month: tr({ month: "long" }),
+    weekday: tr({ weekday: "long" }),
+    year: tr({ year: "numeric" }),
+    time: tr({ hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+  };
+
+  function setText(card, selector, value) {
+    const el = card.querySelector(selector);
+    if (el) el.textContent = value;
+  }
+
+  function fillDates(card) {
+    const start = startOf(card);
+
+    setText(card, ".ne-date-overlay .day", fmt.day.format(start));
+    setText(card, ".ne-date-overlay .mo", fmt.month.format(start));
+    setText(
+      card,
+      "[data-ne-date]",
+      `${fmt.weekday.format(start)}, ${fmt.day.format(start)} ${fmt.month.format(start)} ${fmt.year.format(start)}`
+    );
+    setText(card, "[data-ne-time]", `${fmt.time.format(start)} – ${fmt.time.format(endOf(card))}`);
+  }
+
+  const STATES = {
+    upcoming:  { title: "Sıradaki Etkinlik", tag: "Yaklaşan Etkinlik",   cls: "ne-tag--upcoming", pulse: false },
+    live:      { title: "Mevcut Etkinlik",   tag: "Etkinlik Başladı",    cls: "ne-tag--live",     pulse: true  },
+    completed: { title: "Son Etkinlik",      tag: "Etkinlik Tamamlandı", cls: "ne-tag--done",     pulse: false },
+  };
+
+  // Pure: pick which card to feature and its state. Exported for reasoning/tests.
+  function selectFeatured(cardEls, now) {
+    const parsed = cardEls.map((el) => ({
+      el,
+      start: startOf(el).getTime(),
+      end: endOf(el).getTime(),
+    }));
+
+    const live = parsed
+      .filter((c) => now < c.end)
+      .sort((a, b) => a.start - b.start);
+
+    if (live.length > 0) {
+      const c = live[0];
+      return { card: c.el, state: now < c.start ? "upcoming" : "live" };
+    }
+
+    const recent = parsed.slice().sort((a, b) => b.end - a.end)[0];
+    return { card: recent.el, state: "completed" };
+  }
+
+  function render({ card, state }) {
+    const conf = STATES[state];
+
+    cards.forEach((c) => { c.hidden = c !== card; });
+
+    fillDates(card);
+
+    if (head) {
+      const title = head.querySelector(".section-title");
+      const eyebrow = head.querySelector(".section-eyebrow");
+      if (title) title.textContent = conf.title;
+      if (eyebrow && card.dataset.eyebrow) eyebrow.textContent = card.dataset.eyebrow;
+    }
+
+    const tag = card.querySelector(".ne-tag");
+    if (tag) {
+      tag.className = `ne-tag ${conf.cls}`;
+      tag.textContent = "";
+      if (conf.pulse) {
+        const dot = document.createElement("span");
+        dot.className = "pulse-dot";
+        tag.appendChild(dot);
+      }
+      tag.appendChild(document.createTextNode(conf.tag));
+    }
+  }
+
+  render(selectFeatured(cards, Date.now()));
+})();

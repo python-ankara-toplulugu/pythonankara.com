@@ -1,4 +1,18 @@
 ---
+### [ ] [EVENT-FEATURE-FLAG] | [2026-06-18]
+- **Status**: [OK] ADOPTED
+- **Objective**: Auto-pick featured event by date.
+- **Hypothesis**: Data-attributes prevent date drift.
+- **Approach**: data-date/start/end + Istanbul +03:00 instants.
+- **Result**:
+    - [States]: upcoming / live / completed
+    - [Selection]: Soonest unended, else last finished.
+    - [Outcome]: Success
+- **The Delta**: Dates derive from flag, never hand-written.
+- **Next Step**: Deploy featured-event logic.
+---
+
+---
 ### [ ] [EVENT-15-COMPLETED] | [2026-06-18]
 - **Status**: [OK] ADOPTED
 - **Objective**: Mark Talk 15 done.
